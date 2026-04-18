@@ -1,0 +1,44 @@
+{
+    "translation": {
+        "sidebar": {
+            "dashboard": "Tổng quan",
+            "attendance": "Bảng chấm công",
+            "requests": "Đơn từ",
+            "profile": "Hồ sơ",
+            "logout": "Đăng xuất"
+        },
+        "dashboard": {
+            "greeting": "Xin chào, {{name}} 👋",
+            "subtitle": "Đây là tổng quan của bạn hôm nay.",
+            "stats": {
+                "onTime": "Đúng giờ",
+                "late": "Đi muộn",
+                "absent": "Vắng mặt",
+                "missingCheckout": "Thiếu Check-out"
+            },
+            "attendance_chart": "Biểu đồ giờ làm việc",
+            "attendance_distribution": "Tỷ lệ chuyên cần",
+            "hours": "Giờ",
+            "month": "Tháng",
+            "year": "Năm"
+        },
+        "attendance": {
+            "title": "Lịch chấm công",
+            "subtitle": "Xem chi tiết giờ vào ra theo tháng",
+            "check_in": "Vào",
+            "check_out": "Ra",
+            "late_mins": "Trễ: {{mins}}p"
+        },
+        "profile": {
+            "title": "Hồ sơ nhân viên",
+            "employee_code": "Mã NV",
+            "email": "Email",
+            "department": "Phòng ban",
+            "position": "Chức vụ",
+            "role": "Quyền",
+            "shift": "Ca làm việc",
+            "base_wage": "Lương cơ bản/giờ",
+            "multiplier": "Hệ số"
+        }
+    }
+}

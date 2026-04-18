@@ -1,0 +1,44 @@
+{
+    "translation": {
+        "sidebar": {
+            "dashboard": "Dashboard",
+            "attendance": "Attendance",
+            "requests": "Requests",
+            "profile": "Profile",
+            "logout": "Logout"
+        },
+        "dashboard": {
+            "greeting": "Hello, {{name}} 👋",
+            "subtitle": "Here is your overview for today.",
+            "stats": {
+                "onTime": "On Time",
+                "late": "Late",
+                "absent": "Absent",
+                "missingCheckout": "Missing Out"
+            },
+            "attendance_chart": "Working Hours Trend",
+            "attendance_distribution": "Attendance Distribution",
+            "hours": "Hours",
+            "month": "Month",
+            "year": "Year"
+        },
+        "attendance": {
+            "title": "Attendance Calendar",
+            "subtitle": "View your daily check-in and check-out logs",
+            "check_in": "In",
+            "check_out": "Out",
+            "late_mins": "Late: {{mins}}m"
+        },
+        "profile": {
+            "title": "Employee Profile",
+            "employee_code": "Emp Code",
+            "email": "Email",
+            "department": "Department",
+            "position": "Position",
+            "role": "Role",
+            "shift": "Shift",
+            "base_wage": "Base Hourly Wage",
+            "multiplier": "Multiplier"
+        }
+    }
+}
