@@ -3,14 +3,36 @@ const router = express.Router();
 const ctrl = require('./requests.controller');
 const verifyToken = require('../../middlewares/verifyToken');
 const checkRole = require('../../middlewares/checkRole');
+const validate = require('../../middlewares/validate');
+const schemas = require('./requests.schema');
 
-// GET   /api/requests            — Role-aware (own list vs all)
-router.get('/', verifyToken, ctrl.getAll);
+router.use(verifyToken);
 
-// POST  /api/requests            — Submit new request
-router.post('/', verifyToken, ctrl.create);
+// GET /requests - scope-aware
+router.get('/', validate(schemas.listRequestSchema), ctrl.getAll);
 
-// PUT   /api/requests/:id/review — HR/ADMIN/MANAGER review
-router.put('/:id/review', verifyToken, checkRole(['ADMIN', 'HR', 'MANAGER']), ctrl.review);
+// GET /requests/pending-count - badge
+router.get('/pending-count', ctrl.getPendingCount);
+
+// POST /requests - submit
+router.post('/', validate(schemas.createRequestSchema), ctrl.create);
+
+// DELETE /requests/:id - owner cancels PENDING
+router.delete('/:id', ctrl.cancel);
+
+// PATCH /requests/:id/approve - Manager+
+router.patch(
+    '/:id/approve',
+    checkRole(['ADMIN', 'HR', 'MANAGER']),
+    ctrl.approve
+);
+
+// PATCH /requests/:id/reject - Manager+
+router.patch(
+    '/:id/reject',
+    checkRole(['ADMIN', 'HR', 'MANAGER']),
+    validate(schemas.rejectSchema),
+    ctrl.reject
+);
 
 module.exports = router;

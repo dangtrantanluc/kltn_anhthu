@@ -1,0 +1,93 @@
+name: hris
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: hris_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-hris_db}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone=+07:00
+    ports:
+      - "${DB_EXPOSE_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hris_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+      # DB
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      DB_NAME: ${DB_NAME:-hris_db}
+      # JWT / auth
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_me_access_secret_min_32_bytes_abcdef}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_me_refresh_secret_min_32_bytes_abcdef}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      JWT_REFRESH_REMEMBER_EXPIRES_IN: ${JWT_REFRESH_REMEMBER_EXPIRES_IN:-30d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      LOGIN_MAX_ATTEMPTS: ${LOGIN_MAX_ATTEMPTS:-5}
+      LOGIN_LOCK_MINUTES: ${LOGIN_LOCK_MINUTES:-15}
+      PASSWORD_RESET_EXPIRES_MINUTES: ${PASSWORD_RESET_EXPIRES_MINUTES:-60}
+      # CORS
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      # Mailer
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-HRIS Portal <no-reply@hris.local>}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:8080}
+    ports:
+      - "${BACKEND_EXPOSE_PORT:-3001}:3001"
+    volumes:
+      # Persist file báo cáo đã xuất giữa các lần redeploy
+      - reports_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Build-time: FE sẽ gọi API qua cùng origin /api (đã được nginx proxy)
+        VITE_API_BASE_URL: /api
+    container_name: hris_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_EXPOSE_PORT:-8080}:80"
+
+volumes:
+  mysql_data:
+  reports_data:

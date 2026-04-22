@@ -3,17 +3,31 @@ const router = express.Router();
 const ctrl = require('./payrolls.controller');
 const verifyToken = require('../../middlewares/verifyToken');
 const checkRole = require('../../middlewares/checkRole');
+const validate = require('../../middlewares/validate');
+const schemas = require('./payrolls.schema');
 
-// GET   /api/payrolls               — Role-aware (own vs all)
-router.get('/', verifyToken, ctrl.getAll);
+// List (scope-aware: USER=own, MANAGER=dept, ADMIN/HR/ACCOUNTANT=all)
+router.get('/', verifyToken, ctrl.list);
 
-// POST  /api/payrolls/calculate     — ADMIN/HR only
-router.post('/calculate', verifyToken, checkRole(['ADMIN', 'HR']), ctrl.calculate);
+// Bulk export list — đặt TRƯỚC '/:id' tránh bị shadow
+router.get('/export', verifyToken, checkRole(['ADMIN', 'HR', 'ACCOUNTANT', 'MANAGER']), ctrl.exportList);
 
-// PUT   /api/payrolls/:id/approve   — ADMIN/HR/MANAGER
-router.put('/:id/approve', verifyToken, checkRole(['ADMIN', 'HR', 'MANAGER']), ctrl.approve);
+// Generate / recompute cho 1 kỳ — toàn công ty / 1 phòng / 1 user
+router.post('/generate', verifyToken, checkRole(['ADMIN', 'HR', 'ACCOUNTANT']), validate(schemas.generate), ctrl.generate);
 
-// PUT   /api/payrolls/:id/confirm   — Owner confirms
-router.put('/:id/confirm', verifyToken, ctrl.confirm);
+// Get 1 phiếu
+router.get('/:id', verifyToken, ctrl.getOne);
+
+// Cập nhật DRAFT (ACCOUNTANT/HR)
+router.put('/:id', verifyToken, checkRole(['ADMIN', 'HR', 'ACCOUNTANT']), validate(schemas.update), ctrl.update);
+
+// Duyệt cấp 1 — MANAGER (cùng phòng ban)
+router.patch('/:id/manager-approve', verifyToken, checkRole(['ADMIN', 'MANAGER']), ctrl.managerApprove);
+
+// Nhân viên xác nhận phiếu của mình
+router.patch('/:id/employee-confirm', verifyToken, ctrl.employeeConfirm);
+
+// Export 1 phiếu xlsx | pdf
+router.get('/:id/export', verifyToken, ctrl.exportOne);
 
 module.exports = router;

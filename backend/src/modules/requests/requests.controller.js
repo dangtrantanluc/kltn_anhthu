@@ -1,54 +1,99 @@
+const db = require('../../config/db');
 const service = require('./requests.service');
 
-const getAll = async (req, res) => {
+const asyncHandler = (fn) => (req, res, next) =>
+    Promise.resolve(fn(req, res, next)).catch(next);
+
+const getUserDepartmentId = async (userId) => {
+    const [rows] = await db.execute(
+        'SELECT department_id FROM users WHERE id = ? LIMIT 1',
+        [userId]
+    );
+    return rows[0]?.department_id || null;
+};
+
+const handleError = (res, err, fallback) => {
+    if (err.status) return res.status(err.status).json({ message: err.message });
+    console.error('[Requests]', err);
+    return res.status(500).json({ message: fallback });
+};
+
+// GET /requests
+const getAll = asyncHandler(async (req, res) => {
     const { userId, role } = req.user;
+    const departmentId =
+        role === 'MANAGER' ? await getUserDepartmentId(userId) : null;
+
+    const data = await service.listRequests({
+        userId,
+        role,
+        scope: req.query.scope,
+        status: req.query.status,
+        request_type: req.query.request_type,
+        page: Number(req.query.page) || 1,
+        limit: Number(req.query.limit) || 20,
+        departmentId,
+    });
+    res.json(data);
+});
+
+// GET /requests/pending-count — badge sidebar
+const getPendingCount = asyncHandler(async (req, res) => {
+    const { userId, role } = req.user;
+    const departmentId =
+        role === 'MANAGER' ? await getUserDepartmentId(userId) : null;
+    const count = await service.countPending({ role, userId, departmentId });
+    res.json({ count });
+});
+
+// POST /requests
+const create = asyncHandler(async (req, res) => {
     try {
-        const requests = await service.getAllRequests(userId, role);
-        return res.json({ requests });
+        const id = await service.createRequest(req.user.userId, req.body);
+        res.status(201).json({ message: 'Đã gửi đơn thành công.', id });
     } catch (err) {
-        console.error('[Requests] getAll error:', err);
-        return res.status(500).json({ message: 'Lỗi server nội bộ.' });
+        return handleError(res, err, 'Tạo đơn thất bại.');
     }
-};
+});
 
-const create = async (req, res) => {
-    const VALID_TYPES = ['LEAVE_REQUEST', 'MISSING_PUNCH'];
-    const VALID_LEAVES = ['PAID', 'UNPAID'];
-    const { request_type, leave_type, target_date, requested_check_in, requested_check_out, reason } = req.body;
-
-    if (!request_type || !target_date || !reason) {
-        return res.status(400).json({ message: 'request_type, target_date, reason là bắt buộc.' });
-    }
-    if (!VALID_TYPES.includes(request_type.toUpperCase())) {
-        return res.status(400).json({ message: `request_type phải là: ${VALID_TYPES.join(', ')}` });
-    }
-    if (leave_type && !VALID_LEAVES.includes(leave_type.toUpperCase())) {
-        return res.status(400).json({ message: `leave_type phải là: ${VALID_LEAVES.join(', ')}` });
-    }
-
+// PATCH /requests/:id/approve
+const approve = asyncHandler(async (req, res) => {
     try {
-        const id = await service.createRequest(req.user.userId, {
-            request_type, leave_type, target_date, requested_check_in, requested_check_out, reason
-        });
-        return res.status(201).json({ message: 'Đã gửi đơn thành công.', id });
+        const reviewer = {
+            userId: req.user.userId,
+            role: req.user.role,
+            departmentId: await getUserDepartmentId(req.user.userId),
+        };
+        await service.approveRequest(req.params.id, reviewer);
+        res.json({ message: 'Đã duyệt đơn.' });
     } catch (err) {
-        console.error('[Requests] create error:', err);
-        return res.status(500).json({ message: 'Lỗi server nội bộ.' });
+        return handleError(res, err, 'Duyệt đơn thất bại.');
     }
-};
+});
 
-const review = async (req, res) => {
-    const { status, reject_reason } = req.body;
-    if (!['APPROVED', 'REJECTED'].includes(status?.toUpperCase())) {
-        return res.status(400).json({ message: 'status phải là APPROVED hoặc REJECTED.' });
-    }
+// PATCH /requests/:id/reject
+const reject = asyncHandler(async (req, res) => {
     try {
-        await service.reviewRequest(req.params.id, req.user.userId, status, reject_reason);
-        return res.json({ message: `Đơn đã được ${status.toLowerCase()}.` });
+        const reviewer = {
+            userId: req.user.userId,
+            role: req.user.role,
+            departmentId: await getUserDepartmentId(req.user.userId),
+        };
+        await service.rejectRequest(req.params.id, reviewer, req.body.reject_reason);
+        res.json({ message: 'Đã từ chối đơn.' });
     } catch (err) {
-        console.error('[Requests] review error:', err);
-        return res.status(500).json({ message: 'Lỗi server nội bộ.' });
+        return handleError(res, err, 'Từ chối đơn thất bại.');
     }
-};
+});
 
-module.exports = { getAll, create, review };
+// DELETE /requests/:id — huỷ đơn của chính mình khi còn PENDING
+const cancel = asyncHandler(async (req, res) => {
+    try {
+        await service.cancelOwnRequest(req.params.id, req.user.userId);
+        res.json({ message: 'Đã huỷ đơn.' });
+    } catch (err) {
+        return handleError(res, err, 'Huỷ đơn thất bại.');
+    }
+});
+
+module.exports = { getAll, getPendingCount, create, approve, reject, cancel };

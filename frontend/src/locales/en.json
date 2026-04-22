@@ -5,7 +5,11 @@
             "attendance": "Attendance",
             "requests": "Requests",
             "profile": "Profile",
-            "logout": "Logout"
+            "logout": "Logout",
+            "payroll": "Payroll",
+            "reports": "Reports",
+            "admin_dashboard": "Admin Dashboard",
+            "audit_logs": "Audit Logs"
         },
         "dashboard": {
             "greeting": "Hello, {{name}} 👋",
@@ -28,6 +32,25 @@
             "check_in": "In",
             "check_out": "Out",
             "late_mins": "Late: {{mins}}m"
+        },
+        "payroll": {
+            "title": "Payroll Management",
+            "subtitle": "Payroll slips by period",
+            "generate": "Generate",
+            "export": "Export Excel",
+            "status_draft": "Draft",
+            "status_manager": "Manager approved",
+            "status_confirmed": "Confirmed",
+            "manager_approve": "Manager approve",
+            "employee_confirm": "I confirm"
+        },
+        "reports": {
+            "title": "Reports",
+            "generate": "New report",
+            "attendance_summary": "Attendance",
+            "payroll_summary": "Payroll",
+            "headcount": "Headcount",
+            "leave_summary": "Leave"
         },
         "profile": {
             "title": "Employee Profile",

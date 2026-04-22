@@ -1,7 +1,9 @@
 const db = require('../../config/db');
 
 const getAllShifts = async () => {
-    const [rows] = await db.execute(`SELECT * FROM shifts ORDER BY shift_name`);
+    const [rows] = await db.execute(
+        `SELECT * FROM shifts ORDER BY shift_name`
+    );
     return rows;
 };
 
@@ -20,8 +22,19 @@ const updateShift = async (id, shift_name, start_time, end_time, allowed_late_mi
     );
 };
 
-module.exports = {
-    getAllShifts,
-    createShift,
-    updateShift,
+const removeShift = async (id) => {
+    // Chặn xoá nếu đang được dùng
+    const [[{ count }]] = await db.query(
+        'SELECT COUNT(*) AS count FROM users WHERE shift_id = ?',
+        [id]
+    );
+    if (count > 0) {
+        const err = new Error(`Ca đang được gán cho ${count} nhân viên, không thể xoá.`);
+        err.status = 409;
+        throw err;
+    }
+    const [r] = await db.execute('DELETE FROM shifts WHERE id = ?', [id]);
+    return r.affectedRows > 0;
 };
+
+module.exports = { getAllShifts, createShift, updateShift, removeShift };

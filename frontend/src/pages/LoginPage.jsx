@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import useAuthStore from '../store/authStore';
 
@@ -7,12 +7,13 @@ export default function LoginPage() {
     const navigate = useNavigate();
     const login = useAuthStore((s) => s.login);
 
-    const [form, setForm] = useState({ email: '', password: '' });
+    const [form, setForm] = useState({ email: '', password: '', rememberMe: false });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
-        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        const { name, value, type, checked } = e.target;
+        setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
         setError('');
     };
 
@@ -22,8 +23,8 @@ export default function LoginPage() {
         setError('');
 
         try {
-            const { data } = await authService.login(form.email, form.password);
-            login(data.token, data.user);
+            const { data } = await authService.login(form.email, form.password, form.rememberMe);
+            login(data.accessToken || data.token, data.refreshToken, data.user);
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
@@ -95,6 +96,22 @@ export default function LoginPage() {
                                 className="w-full px-4 py-2.5 rounded-lg bg-[#0f172a] border border-[#334155] text-white placeholder-slate-500
                            focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                             />
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm">
+                            <label className="flex items-center gap-2 text-slate-300 select-none cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    name="rememberMe"
+                                    checked={form.rememberMe}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 rounded border-slate-500 bg-[#0f172a] text-indigo-500 focus:ring-indigo-500"
+                                />
+                                Ghi nhớ đăng nhập
+                            </label>
+                            <Link to="/forgot-password" className="text-indigo-400 hover:text-indigo-300">
+                                Quên mật khẩu?
+                            </Link>
                         </div>
 
                         <button

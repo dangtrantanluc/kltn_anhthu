@@ -1,0 +1,30 @@
+# Env
+.env
+.env.local
+*.env.local
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Runtime data
+backend/uploads/
+backend/logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml

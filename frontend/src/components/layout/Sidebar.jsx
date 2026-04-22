@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,16 +7,46 @@ import {
     FileText,
     UserSquare2,
     LogOut,
-    Globe
+    Globe,
+    Users,
+    MapPin,
+    Clock,
+    ClipboardCheck,
+    Fingerprint,
+    Wallet,
+    FileBarChart2,
+    ShieldCheck,
+    Gauge,
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { authService, requestService } from '../../services/api';
 
 export default function Sidebar() {
-    const { user, logout } = useAuthStore();
+    const { user, refreshToken, logout } = useAuthStore();
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
+    const [pendingCount, setPendingCount] = useState(0);
 
-    const handleLogout = () => {
+    const canReview = ['ADMIN', 'HR', 'MANAGER'].includes(user?.role);
+    useEffect(() => {
+        if (!canReview) return;
+        const fetchCount = () => {
+            requestService
+                .pendingCount()
+                .then((r) => setPendingCount(r.data.count || 0))
+                .catch(() => { });
+        };
+        fetchCount();
+        const id = setInterval(fetchCount, 60000);
+        return () => clearInterval(id);
+    }, [canReview]);
+
+    const handleLogout = async () => {
+        try {
+            if (refreshToken) await authService.logout(refreshToken);
+        } catch {
+            /* ignore — vẫn đăng xuất local */
+        }
         logout();
         navigate('/login');
     };
@@ -26,27 +56,108 @@ export default function Sidebar() {
         i18n.changeLanguage(newLang);
     };
 
+    const isHR = ['ADMIN', 'HR'].includes(user?.role);
+    const isAdmin = user?.role === 'ADMIN';
+    const isManagerOrAbove = ['ADMIN', 'HR', 'MANAGER'].includes(user?.role);
+    const canSeePayroll = ['ADMIN', 'HR', 'ACCOUNTANT', 'MANAGER', 'USER'].includes(user?.role);
+    const canSeeReports = ['ADMIN', 'HR', 'MANAGER', 'ACCOUNTANT'].includes(user?.role);
+    const canSeeAdminDashboard = ['ADMIN', 'HR', 'MANAGER', 'ACCOUNTANT'].includes(user?.role);
+
     const navItems = [
         {
             to: '/dashboard',
             label: t('sidebar.dashboard'),
-            icon: <LayoutDashboard className="w-5 h-5" />
+            icon: <LayoutDashboard className="w-5 h-5" />,
+        },
+        {
+            to: '/dashboard/punch',
+            label: 'Chấm công',
+            icon: <Fingerprint className="w-5 h-5" />,
         },
         {
             to: '/dashboard/attendance',
             label: t('sidebar.attendance'),
-            icon: <CalendarClock className="w-5 h-5" />
+            icon: <CalendarClock className="w-5 h-5" />,
         },
         {
             to: '/dashboard/leave',
             label: t('sidebar.requests'),
-            icon: <FileText className="w-5 h-5" />
+            icon: <FileText className="w-5 h-5" />,
+            badge: canReview && pendingCount > 0 ? pendingCount : null,
         },
         {
             to: '/dashboard/profile',
             label: t('sidebar.profile'),
-            icon: <UserSquare2 className="w-5 h-5" />
+            icon: <UserSquare2 className="w-5 h-5" />,
         },
+        ...(canSeePayroll
+            ? [
+                {
+                    to: '/payrolls',
+                    label: 'Bảng lương',
+                    icon: <Wallet className="w-5 h-5" />,
+                },
+            ]
+            : []),
+        ...(canSeeAdminDashboard
+            ? [
+                {
+                    to: '/admin/dashboard',
+                    label: 'Dashboard quản trị',
+                    icon: <Gauge className="w-5 h-5" />,
+                },
+            ]
+            : []),
+        ...(canSeeReports
+            ? [
+                {
+                    to: '/reports',
+                    label: 'Báo cáo',
+                    icon: <FileBarChart2 className="w-5 h-5" />,
+                },
+            ]
+            : []),
+        ...(isHR
+            ? [
+                {
+                    to: '/hr/users',
+                    label: 'Quản lý nhân sự',
+                    icon: <Users className="w-5 h-5" />,
+                },
+            ]
+            : []),
+        ...(isManagerOrAbove
+            ? [
+                {
+                    to: '/admin/attendance',
+                    label: 'Bảng chấm công',
+                    icon: <ClipboardCheck className="w-5 h-5" />,
+                },
+            ]
+            : []),
+        ...(isAdmin
+            ? [
+                {
+                    to: '/admin/locations',
+                    label: 'Địa điểm',
+                    icon: <MapPin className="w-5 h-5" />,
+                },
+                {
+                    to: '/admin/shifts',
+                    label: 'Ca làm việc',
+                    icon: <Clock className="w-5 h-5" />,
+                },
+            ]
+            : []),
+        ...(isHR
+            ? [
+                {
+                    to: '/admin/audit-logs',
+                    label: 'Audit log',
+                    icon: <ShieldCheck className="w-5 h-5" />,
+                },
+            ]
+            : []),
     ];
 
     return (
@@ -82,7 +193,12 @@ export default function Sidebar() {
                         }
                     >
                         {item.icon}
-                        {item.label}
+                        <span className="flex-1">{item.label}</span>
+                        {item.badge != null && (
+                            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                                {item.badge}
+                            </span>
+                        )}
                     </NavLink>
                 ))}
             </nav>

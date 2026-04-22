@@ -1,8 +1,7 @@
-const jwt = require('jsonwebtoken');
+const { verifyAccess } = require('../utils/tokens');
 
 /**
- * verifyToken middleware
- * Parses Bearer token from Authorization header and attaches decoded payload to req.user
+ * verifyToken — parse Bearer, attach decoded → req.user
  */
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -12,12 +11,11 @@ const verifyToken = (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // { userId, role, email }
+        req.user = verifyAccess(token); // { userId, employeeCode, email, role, type:'access' }
         next();
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({ message: 'Token expired. Please login again.' });
+            return res.status(401).json({ message: 'Token expired.' });
         }
         return res.status(401).json({ message: 'Invalid token.' });
     }

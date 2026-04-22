@@ -5,7 +5,11 @@
             "attendance": "Bảng chấm công",
             "requests": "Đơn từ",
             "profile": "Hồ sơ",
-            "logout": "Đăng xuất"
+            "logout": "Đăng xuất",
+            "payroll": "Bảng lương",
+            "reports": "Báo cáo",
+            "admin_dashboard": "Dashboard quản trị",
+            "audit_logs": "Audit log"
         },
         "dashboard": {
             "greeting": "Xin chào, {{name}} 👋",
@@ -28,6 +32,25 @@
             "check_in": "Vào",
             "check_out": "Ra",
             "late_mins": "Trễ: {{mins}}p"
+        },
+        "payroll": {
+            "title": "Quản lý lương",
+            "subtitle": "Tổng hợp phiếu lương theo kỳ",
+            "generate": "Tính lương",
+            "export": "Xuất Excel",
+            "status_draft": "Chưa duyệt",
+            "status_manager": "Quản lý đã duyệt",
+            "status_confirmed": "Đã xác nhận",
+            "manager_approve": "Quản lý duyệt",
+            "employee_confirm": "Tôi xác nhận"
+        },
+        "reports": {
+            "title": "Quản lý báo cáo",
+            "generate": "Lập báo cáo",
+            "attendance_summary": "Chấm công",
+            "payroll_summary": "Lương",
+            "headcount": "Nhân sự",
+            "leave_summary": "Nghỉ phép"
         },
         "profile": {
             "title": "Hồ sơ nhân viên",

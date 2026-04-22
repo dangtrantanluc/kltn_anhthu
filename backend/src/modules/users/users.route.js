@@ -3,19 +3,42 @@ const router = express.Router();
 const ctrl = require('./users.controller');
 const verifyToken = require('../../middlewares/verifyToken');
 const checkRole = require('../../middlewares/checkRole');
+const validate = require('../../middlewares/validate');
+const schemas = require('./users.schema');
 
 router.use(verifyToken);
 
-// GET /api/users  — ADMIN, HR
-router.get('/', checkRole(['ADMIN', 'HR']), ctrl.getAllUsers);
+// PATCH /users/me — any authenticated user
+router.patch('/me', validate(schemas.updateMeSchema), ctrl.updateMe);
 
-// GET /api/users/:id — ADMIN, HR, MANAGER
+// GET /users
+router.get(
+    '/',
+    checkRole(['ADMIN', 'HR']),
+    validate(schemas.listUsersSchema),
+    ctrl.getAllUsers
+);
+
+// GET /users/:id
 router.get('/:id', checkRole(['ADMIN', 'HR', 'MANAGER']), ctrl.getUserById);
 
-// POST /api/users  — ADMIN, HR
-router.post('/', checkRole(['ADMIN', 'HR']), ctrl.createUser);
+// POST /users
+router.post(
+    '/',
+    checkRole(['ADMIN', 'HR']),
+    validate(schemas.createUserSchema),
+    ctrl.createUser
+);
 
-// PUT /api/users/:id  — ADMIN, HR
-router.put('/:id', checkRole(['ADMIN', 'HR']), ctrl.updateUser);
+// PUT /users/:id
+router.put(
+    '/:id',
+    checkRole(['ADMIN', 'HR']),
+    validate(schemas.updateUserSchema),
+    ctrl.updateUser
+);
+
+// DELETE /users/:id (soft)
+router.delete('/:id', checkRole(['ADMIN', 'HR']), ctrl.deleteUser);
 
 module.exports = router;
