@@ -121,7 +121,7 @@ export default function Sidebar() {
             ? [
                 {
                     to: '/hr/users',
-                    label: 'Quản lý nhân sự',
+                    label: 'Quản lý hồ sơ nhân sự',
                     icon: <Users className="w-5 h-5" />,
                 },
             ]
