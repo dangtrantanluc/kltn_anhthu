@@ -22,6 +22,7 @@ const seedData = async () => {
         await db.execute(`INSERT IGNORE INTO departments (id, code, name) VALUES (2, 'HR', 'Phòng Hành Chính Nhân Sự')`);
         await db.execute(`INSERT IGNORE INTO departments (id, code, name) VALUES (3, 'IT', 'Phòng Công Nghệ Thông Tin')`);
         await db.execute(`INSERT IGNORE INTO departments (id, code, name) VALUES (4, 'SALES', 'Phòng Kinh Doanh')`);
+        await db.execute(`INSERT IGNORE INTO departments (id, code, name) VALUES (5, 'ACCT', 'Phòng Kế Toán')`);
 
         // 3. Tạo chức vụ
         await db.execute(`INSERT IGNORE INTO positions (id, code, name) VALUES (1, 'DIR', 'Giám Đốc')`);
@@ -29,6 +30,7 @@ const seedData = async () => {
         await db.execute(`INSERT IGNORE INTO positions (id, code, name) VALUES (3, 'IT_MGR', 'Trưởng Phòng IT')`);
         await db.execute(`INSERT IGNORE INTO positions (id, code, name) VALUES (4, 'DEV', 'Lập Trình Viên')`);
         await db.execute(`INSERT IGNORE INTO positions (id, code, name) VALUES (5, 'SALES_NOOB', 'Nhân viên Kinh Doanh')`);
+        await db.execute(`INSERT IGNORE INTO positions (id, code, name) VALUES (6, 'ACC', 'Kế Toán')`);
 
         // 4. Tạo ca làm việc
         await db.execute(`INSERT IGNORE INTO shifts (id, shift_name, start_time, end_time, allowed_late_mins) VALUES (1, 'Ca Hành Chính', '08:00:00', '17:00:00', 5)`);
@@ -46,6 +48,7 @@ const seedData = async () => {
             { id: 4, empCode: 'IT-02', email: 'user@test.com', name: 'Nguyễn Văn Lập Trình', role: 'USER', dept: 3, pos: 4, shift: 1, wage: 50000, multi: 1.0, manager_id: 3 },
             { id: 5, empCode: 'SALES-01', email: 'sales1@test.com', name: 'Đỗ Thị Bán Hàng', role: 'USER', dept: 4, pos: 5, shift: 2, wage: 30000, multi: 1.0, manager_id: 1 },
             { id: 6, empCode: 'SALES-02', email: 'sales2@test.com', name: 'Hoàng Văn Telesales', role: 'USER', dept: 4, pos: 5, shift: 3, wage: 30000, multi: 1.0, manager_id: 1 },
+            { id: 7, empCode: 'ACC-01', email: 'accountant@test.com', name: 'Vũ Thị Kế Toán', role: 'ACCOUNTANT', dept: 5, pos: 6, shift: 1, wage: 80000, multi: 1.1, manager_id: 1 },
         ];
 
         for (const u of users) {
